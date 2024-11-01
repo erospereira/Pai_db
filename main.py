@@ -25,7 +25,6 @@ class SentimentAnalysis(BaseModel):
     sentiment: str
     date: str
 
-
 # 1. Fetch Real-Time Data for Housing
 @app.get("/housing")
 async def get_housing_data():
@@ -34,8 +33,16 @@ async def get_housing_data():
         raise HTTPException(status_code=404, detail="No housing data found")
     return data
 
+# 2. Add New Housing Data (POST)
+@app.post("/housing")
+async def add_housing_data(housing_data: HousingData):
+    try:
+        housing_collection.insert_one(housing_data.dict())
+        return {"message": "Housing data added successfully"}
+    except:
+        raise HTTPException(status_code=500, detail="Failed to add housing data")
 
-# 2. Store User Survey Responses
+# 3. Store User Survey Responses
 @app.post("/survey")
 async def store_survey_data(response: SurveyResponse):
     try:
@@ -44,8 +51,7 @@ async def store_survey_data(response: SurveyResponse):
     except:
         raise HTTPException(status_code=500, detail="Failed to store survey data")
 
-
-# 3. Fetch Real-Time Crime Reports
+# 4. Fetch Real-Time Crime Reports
 @app.get("/crime")
 async def get_crime_data():
     data = list(crime_collection.find({}, {"_id": 0}))
@@ -53,8 +59,7 @@ async def get_crime_data():
         raise HTTPException(status_code=404, detail="No crime data found")
     return data
 
-
-# 4. Store Sentiment Analysis Data
+# 5. Store Sentiment Analysis Data
 @app.post("/sentiment")
 async def store_sentiment_data(sentiment: SentimentAnalysis):
     try:
@@ -63,8 +68,7 @@ async def store_sentiment_data(sentiment: SentimentAnalysis):
     except:
         raise HTTPException(status_code=500, detail="Failed to store sentiment data")
 
-
-# 5. Fetch Sentiment Analysis Results
+# 6. Fetch Sentiment Analysis Results
 @app.get("/sentiment")
 async def get_sentiment_data():
     data = list(sentiment_collection.find({}, {"_id": 0}))
@@ -72,6 +76,32 @@ async def get_sentiment_data():
         raise HTTPException(status_code=404, detail="No sentiment data found")
     return data
 
+# 7. Delete Housing Data by Area and Date (DELETE)
+@app.delete("/housing")
+async def delete_housing_data(area: str, date: str):
+    result = housing_collection.delete_one({"area": area, "date": date})
+    if result.deleted_count == 1:
+        return {"message": "Housing data deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Housing data not found")
+
+# 8. Delete Crime Data by Neighborhood and Date (DELETE)
+@app.delete("/crime")
+async def delete_crime_data(neighborhood: str, date: str):
+    result = crime_collection.delete_one({"neighborhood": neighborhood, "date": date})
+    if result.deleted_count == 1:
+        return {"message": "Crime data deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Crime data not found")
+
+# 9. Delete Sentiment Data by Date and Sentiment (DELETE)
+@app.delete("/sentiment")
+async def delete_sentiment_data(date: str, sentiment: str):
+    result = sentiment_collection.delete_one({"date": date, "sentiment": sentiment})
+    if result.deleted_count == 1:
+        return {"message": "Sentiment data deleted successfully"}
+    else:
+        raise HTTPException(status_code=404, detail="Sentiment data not found")
 
 if __name__ == "__main__":
     import uvicorn
